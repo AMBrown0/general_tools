@@ -181,14 +181,14 @@ directory = select_directory()
 # Find all .pptx files in the selected directory recursively
 pptx_files = find_pptx_files(directory)
 
-all_slides_text_list=extract_powepoint_text(pptx_files)
+#all_slides_text_list=extract_powepoint_text(pptx_files)
 
 
 #Write to text file
 text_file_name="slide_summary"
 now = datetime.now()
 date_time = now.strftime("%Y-%m-%d-%H-%M-%S")
-text_file_name=f"{directory}/{text_file_name}-{date_time}.txt"
+
 question_file_name=f"{text_file_name}q-{date_time}.txt"
 last_filename="NONE"
 
@@ -215,34 +215,90 @@ last_filename="NONE"
 
 responses=[]
 
-with open(text_file_name, "w") as file:
-    complete_slide_text=""
-    for slide in all_slides_text_list:    
-        
-        
-        filename=slide.get("file")
-        ppt = pptx.Presentation(filename)
-        if not filename == last_filename:
-            # New slide deck
-            slide_title_text=f"\n\n{filename}\n"
-            file.write(slide_title_text)
-            file.write(" =============================================================================\n\n")
-            last_filename=filename
-            
-        # if filename != last_filename:
-        #     file.write(f"\n\n================= {filename}==============\n")
-        #     last_filename=filename
-        heading=slide.get("heading")
-        text_body=slide.get("body_text")
-        slide_pointer=slide.get("slide_pointer")
-        #"detailed summary if thi
-        ai_text=f"{heading}\n{text_body}"
-        complete_slide_text=complete_slide_text+ai_text
 
-        r=call_openapi_recursive(ai_text,"create a detailed summary of this powerpoint slide texts")
+
+for filename in pptx_files:
+    text_file_name=f"{filename}_{date_time}.txt"
+    ppt = pptx.Presentation(filename)
+    with open(text_file_name, "w") as file:
+        slide_title_text=f"\n\n{filename}\n"
+        file.write(slide_title_text)
+        file.write(" =============================================================================\n\n")
+        slide_no=0
+        for slide in ppt.slides: 
+            if slide_no != 0:
+                try:
+                    heading=slide.shapes.title.text
+                except:
+                    heading=""
+                
+                text = ""
+                
+                number_shapes_on_slide=len(slide.shapes)
+                for i in range(0,number_shapes_on_slide):
+                    shape=slide.shapes[i]
+                    if hasattr(shape, "text"):
+                        #print(slide.shapes[0].shape_type)
+                        text += shape.text
+                        #body_text.append(text)
+                print(f"body_text:{text}\n\n")
+                
+                #Call AI to summerise
+                ai_text=f"{heading}\n{text}"
+                
+                r=call_openapi_recursive(ai_text,"create a detailed summary of this powerpoint slide texts")
+                
+                #Update the slide notes
+                notes_slide = slide.notes_slide
+                text_frame = notes_slide.notes_text_frame
+                text_frame.text=r
+                
+                #Add the response to the text summary file
+                file.write(f"{heading}\n\n{r}\n\n")
+            slide_no+=1
+        ppt.save(filename)
+    #create a word stype document based on this text from the slides
+    mcq_file_name=f"{filename}_{date_time}_mcq.txt"
+    with open(text_file_name,'r') as file:
+        content=file.read()    
+    with open(mcq_file_name,'w') as file_w:
+        r=call_openapi_recursive(content,"create 10 multiple choice questions state which option is correct")    
+        file_w.write(r)
+    
+         
             
-        responses.append(r)
-        file.write(f"{heading}\n\n{r}\n\n")
+        
+
+
+
+# with open(text_file_name, "w") as file:
+#     complete_slide_text=""
+#     for slide in all_slides_text_list:    
+        
+        
+#         filename=slide.get("file")
+#         ppt = pptx.Presentation(filename)
+#         if not filename == last_filename:
+#             # New slide deck
+#             slide_title_text=f"\n\n{filename}\n"
+#             file.write(slide_title_text)
+#             file.write(" =============================================================================\n\n")
+#             last_filename=filename
+            
+#         # if filename != last_filename:
+#         #     file.write(f"\n\n================= {filename}==============\n")
+#         #     last_filename=filename
+#         heading=slide.get("heading")
+#         text_body=slide.get("body_text")
+#         slide_pointer=slide.get("slide_pointer")
+#         #"detailed summary if thi
+#         ai_text=f"{heading}\n{text_body}"
+#         complete_slide_text=complete_slide_text+ai_text
+
+#         r=call_openapi_recursive(ai_text,"create a detailed summary of this powerpoint slide texts")
+            
+#         responses.append(r)
+#         file.write(f"{heading}\n\n{r}\n\n")
         
         #Update the sldie notes
         #notes_slide = slide_pointer.notes_slide
@@ -251,7 +307,7 @@ with open(text_file_name, "w") as file:
         #notes_placeholder = notes_slide.notes_placeholder
         #notes_placeholder.text = notes_text=r
         
-        print(f"summary={r}")
+        # print(f"summary={r}")
         
 
 
