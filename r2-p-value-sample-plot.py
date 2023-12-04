@@ -3,8 +3,8 @@ import matplotlib.pyplot as plt
 
 
 # Define the range for random floating-point values
-y_min = -50.0  # Minimum value
-y_max = 50.0  # Maximum value
+y_min = 0  # Minimum value
+y_max = 100.0  # Maximum value
 
 # Generate 100 random floating-point values within the specified range
 random_floats = [random.uniform(y_min, y_max) for _ in range(100)]
@@ -24,7 +24,7 @@ step_size = (x_max - x_min) / 99
 x_values = [x_min + i * step_size for i in range(100)]
 
 # Calculate the corresponding y values using y = 2x + 1
-y_values = [2 * x + 1 for x in x_values]
+y_values = [0.02 * x + 1 for x in x_values]
 
 # Print the generated points
 for x, y in zip(x_values, y_values):
