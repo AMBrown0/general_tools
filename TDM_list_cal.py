@@ -803,6 +803,26 @@ if len(xlsx_files) > 0:
     most_recent_xlsx = xlsx_files[0]
     print("Most recent XLSX file: " + most_recent_xlsx)
     cal_df=pd.read_excel(most_recent_xlsx)
+
+    
+    #Add a group by column groups approinmetns with the same time together
+    #cal_df['groupid'] = cal_df['Start date'].astype(str) + cal_df['Finish time'].astype(str)
+    # Group the data by Start Date and End Date and iterate over each group
+#    grouped = cal_df.groupby(['Start date', 'Finish date'])
+#
+#    for group, data in grouped:
+#        print(group)
+#        for index,row in data.iterrows():
+#            print(f"    {row['First name']} {row['Surname']} {row['Email address']}")
+        #for row in data:
+        #    print(f"{row} {type(row)}")
+        
+        #for row in data:
+        #    print(f"    {row.first_name} {row.last_name}")
+
+        
+        
+    cal_df.to_excel("most_recent_grouped.xlsx")
     print(cal_df)
 #test
 #    #print(cal_come_download_folder())
